@@ -1,0 +1,19 @@
+name = "cloudssh"
+main = "src/worker/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[durable_objects.bindings]]
+name = "SSH_SESSION"
+class_name = "SSHSessionDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SSHSessionDO"]
+
+[site]
+bucket = "./frontend/dist"
+
+[vars]
+MAX_CONNECTIONS = "100"
+IDLE_TIMEOUT = "1800"

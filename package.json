@@ -1,0 +1,22 @@
+{
+  "name": "cloudssh",
+  "version": "1.0.0",
+  "description": "纯 Cloudflare 架构 Web SSH 工具",
+  "main": "src/worker/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "vitest run"
+  },
+  "keywords": ["ssh", "cloudflare", "web-terminal"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241230.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.99.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {}
+}

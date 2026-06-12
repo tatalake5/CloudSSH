@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudSSH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="auth-section">
+      <div class="auth-header">
+        <h1>CloudSSH</h1>
+        <p>纯 Cloudflare 驱动的 Web SSH 终端</p>
+      </div>
+      <div id="connection-form"></div>
+    </div>
+
+    <div id="toolbar" style="display: none;">
+      <span id="connection-info"></span>
+      <button id="disconnect-btn">断开连接</button>
+    </div>
+    <div id="terminal-container" style="display: none;"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
