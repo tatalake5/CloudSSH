@@ -78,15 +78,6 @@ export class ECDHKeyExchange {
     serverRawPublicKey: Uint8Array,
     sharedSecret: Uint8Array
   ): Promise<Uint8Array> {
-    console.log('[KEX-ECDH] Exchange hash inputs:');
-    console.log('  clientVersion:', clientVersion);
-    console.log('  serverVersion:', serverVersion);
-    console.log('  clientKEXInit len:', clientKEXInit.length);
-    console.log('  serverKEXInit len:', serverKEXInit.length);
-    console.log('  hostKey len:', hostKey.length);
-    console.log('  clientRawPublicKey len:', clientRawPublicKey.length);
-    console.log('  serverRawPublicKey len:', serverRawPublicKey.length);
-    console.log('  sharedSecret len:', sharedSecret.length, 'hex:', Array.from(sharedSecret.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '));
     const data = concat(
       encodeString(clientVersion),
       encodeString(serverVersion),

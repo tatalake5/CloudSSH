@@ -105,7 +105,6 @@ export class SSHSession {
         } else {
           try {
             this.packetParser.feed(value);
-            console.log('[PKT] Processing packets, decryptCipher:', !!this.decryptCipher, 'parser seqNum:', this.packetParser.getSeqNum());
             await this.processPackets();
           } catch (pktError) {
             const pktErrMsg = pktError instanceof Error ? pktError.message : String(pktError);
@@ -158,8 +157,6 @@ export class SSHSession {
   }
 
   private async writeSocket(data: Uint8Array): Promise<void> {
-    const hexPreview = Array.from(data.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    console.log('[SOCK] Writing', data.length, 'bytes:', hexPreview, '...');
     const writer = this.socket.writable.getWriter();
     await writer.write(data);
     writer.releaseLock();
@@ -172,18 +169,15 @@ export class SSHSession {
       const packet = await this.packetParser.nextPacket(
         blockSize,
         this.decryptCipher
-          ? (data, seq) => this.decryptCipher!.decrypt(data, seq)
+          ? (data, seq, aad) => this.decryptCipher!.decrypt(data, seq, aad)
           : (data) => data,
         !!this.decryptCipher
       );
 
-      if (!packet) {
-        console.log('[PKT] No complete packet available, buffer size:', this.packetParser.getBufferLength());
-        break;
-      }
+      if (!packet) break;
 
       const msgType = packet.payload[0];
-      console.log('[PKT] Received message type:', msgType, 'state:', this.state, 'payload len:', packet.payload.length);
+      console.log('[PKT] Received message type:', msgType, 'state:', this.state);
 
       await this.handlePacket(packet);
     }
@@ -283,13 +277,6 @@ export class SSHSession {
     console.log('[KEX] Enabling encryption...');
     const keys = this.derivedKeys;
 
-    const c2sKeyHex = Array.from(keys.encKeyClientToServer.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    const c2sIVHex = Array.from(keys.ivClientToServer).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    const s2cKeyHex = Array.from(keys.encKeyServerToClient.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    const s2cIVHex = Array.from(keys.ivServerToClient).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    console.log('[KEX] C2S key (first 8):', c2sKeyHex, 'IV:', c2sIVHex);
-    console.log('[KEX] S2C key (first 8):', s2cKeyHex, 'IV:', s2cIVHex);
-
     this.encryptCipher = new SSHAESGCMCipher(
       keys.encKeyClientToServer,
       keys.ivClientToServer
@@ -317,7 +304,7 @@ export class SSHSession {
 
     const packet = await SSHPacketBuilder.build(
       serviceRequest, 16,
-      (data, seq) => this.encryptCipher!.encrypt(data, seq),
+      (data, seq, aad) => this.encryptCipher!.encrypt(data, seq, aad),
       this.seqNumSend++,
       true
     );
@@ -335,7 +322,7 @@ export class SSHSession {
 
     const packet = await SSHPacketBuilder.build(
       authRequest, 16,
-      (data, seq) => this.encryptCipher!.encrypt(data, seq),
+      (data, seq, aad) => this.encryptCipher!.encrypt(data, seq, aad),
       this.seqNumSend++,
       true
     );
@@ -476,7 +463,7 @@ export class SSHSession {
 
     const encrypted = await SSHPacketBuilder.build(
       payload, 16,
-      (data, seq) => this.encryptCipher!.encrypt(data, seq),
+      (data, seq, aad) => this.encryptCipher!.encrypt(data, seq, aad),
       this.seqNumSend++,
       true
     );

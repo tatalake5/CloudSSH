@@ -27,43 +27,35 @@ export class SSHAESGCMCipher {
     return nonce;
   }
 
-  async encrypt(plaintext: Uint8Array, seqNum?: number): Promise<Uint8Array> {
+  async encrypt(plaintext: Uint8Array, seqNum?: number, aad?: Uint8Array): Promise<Uint8Array> {
     if (!this.key) throw new Error('Cipher not initialized');
     const seq = seqNum ?? this.seqNum++;
     const nonce = this.buildNonce(seq);
 
-    console.log('[CRYPTO] encrypt seqNum:', seq, 'nonce[8..11]:', nonce[8], nonce[9], nonce[10], nonce[11], 'plaintext len:', plaintext.length);
+    const alg: AesGcmParams = { name: 'AES-GCM', iv: nonce, tagLength: 128 };
+    if (aad) alg.additionalData = aad;
 
     const encrypted = new Uint8Array(
-      await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv: nonce, tagLength: 128 },
-        this.key,
-        plaintext
-      )
+      await crypto.subtle.encrypt(alg, this.key, plaintext)
     );
 
     return encrypted;
   }
 
-  async decrypt(ciphertext: Uint8Array, seqNum?: number): Promise<Uint8Array | null> {
+  async decrypt(ciphertext: Uint8Array, seqNum?: number, aad?: Uint8Array): Promise<Uint8Array | null> {
     if (!this.key) throw new Error('Cipher not initialized');
     const seq = seqNum ?? this.seqNum++;
     const nonce = this.buildNonce(seq);
 
-    console.log('[CRYPTO] decrypt seqNum:', seq, 'nonce[8..11]:', nonce[8], nonce[9], nonce[10], nonce[11], 'ciphertext len:', ciphertext.length);
+    const alg: AesGcmParams = { name: 'AES-GCM', iv: nonce, tagLength: 128 };
+    if (aad) alg.additionalData = aad;
 
     try {
       const decrypted = new Uint8Array(
-        await crypto.subtle.decrypt(
-          { name: 'AES-GCM', iv: nonce, tagLength: 128 },
-          this.key,
-          ciphertext
-        )
+        await crypto.subtle.decrypt(alg, this.key, ciphertext)
       );
       return decrypted;
     } catch (e) {
-      const errMsg = e instanceof Error ? e.message : String(e);
-      console.error('[CRYPTO] decrypt FAILED seqNum:', seq, 'error:', errMsg);
       return null;
     }
   }
